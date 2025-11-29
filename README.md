@@ -4,6 +4,7 @@ O código já está funcionando com sucesso para as quatro estruturas:
 * **Hash** (SimHash 128b + Hamming)
 * **Quadtree** (2D baseado no histograma RGB)
 * **M-Tree** (estrutura métrica simplificada)
+
 Também já está implementado:
 * **cálculo de histograma RGB** (8×8×8 → 512 bins)
 * **distância qui-quadrado**
@@ -46,6 +47,7 @@ A implementação usa:
 * sem minMax, balanced ou random promotion
 
 **Isso NÃO afeta as buscas 1-NN nesse conjunto pequeno**
+
 O resultado continuará o mesmo que a lista linear.
 
 **A análise teórica continua válida**
