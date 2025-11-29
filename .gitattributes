@@ -1,2 +1,22 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# VSCode settings
+.vscode/
+
+# Compiled executable
+*.exe
+*.out
+*.o
+*.obj
+
+# Debug files
+*.pdb
+*.ilk
+
+# Cache / lixo
+*.log
+*.tmp
+
+# Diretórios do programa
+output/

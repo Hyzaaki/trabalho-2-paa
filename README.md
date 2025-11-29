@@ -14,12 +14,12 @@ Também já está implementado:
 
 ---
 ## O que ainda falta fazer
-1. **Usar mais imagens nos experimentos**
+1. **Usar mais imagens nos experimentos** [FEITO]
 * Atualmente o teste usa apenas 4 imagens.
 * O ideal para o relatório é entre 50 e 200 imagens
 * todas no formato PPM P6 (o código só aceita esse formato)
 
-2. **Ajustar o main para testes em lote**
+2. **Ajustar o main para testes em lote** [FEITO]
 
 3. **Gerar tabelas para o relatório**
 Depois que o código estiver rodando com N imagens, será necessário produzir:

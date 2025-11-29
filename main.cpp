@@ -6,7 +6,6 @@
 #include <iostream>
 #include <vector>
 #include <limits>
-#include <cmath>
 #include <chrono>
 using namespace std;
 
@@ -109,113 +108,138 @@ ListSearchResult searchMostSimilar(vector<ImageItem> &index, ImageItem &queryIma
 // MAIN
 int main()
 {
-  // Caminhos das imagens
-  string path1 = "images/img1.ppm";
-  string path2 = "images/img2.ppm";
-  string path3 = "images/img3.ppm";
-  string path4 = "images/img4.ppm";
+    // Caminhos das imagens (agora em bulk)
+    int startIdx = 1;
+    int endIdx = 100;
 
-  // Carrega imagens e histogramas
-  ImageRGB8 img1, img2, img3, img4;
-  vector<float> hist1, hist2, hist3, hist4;
+    // Carrega imagens e histogramas
+    vector<ImageItem> allImages;
 
-  if (!loadDescribeAndHistogram(path1, img1, hist1))
-    return 1;
-  if (!loadDescribeAndHistogram(path2, img2, hist2))
-    return 1;
-  if (!loadDescribeAndHistogram(path3, img3, hist3))
-    return 1;
-  if (!loadDescribeAndHistogram(path4, img4, hist4))
-    return 1;
+    for (int i = startIdx; i <= endIdx; i++)
+    {
+        string path = "images/img" + to_string(i) + ".ppm";
+        ImageRGB8 img;
+        vector<float> hist;
 
-  ImageItem imageItem1("imagem_1", hist1);
-  ImageItem imageItem2("imagem_2", hist2);
-  ImageItem imageItem3("imagem_3", hist3);
-  ImageItem imageQueryItem("imagem_4", hist4);
+        if (!loadDescribeAndHistogram(path, img, hist))
+        {
+            cerr << "Erro ao carregar imagem " << path << ". Encerrando.\n";
+            return 1;
+        }
 
-  // BUSCAS NORMAIS (SEM TEMPO)
-  vector<ImageItem> imagesList = {imageItem1, imageItem2, imageItem3};
+        string id = "imagem_" + to_string(i);
+        allImages.push_back(ImageItem(id, hist));
+    }
 
-  cout << "\n\n== BUSCA EM LISTA ==\n";
-  ListSearchResult listRes0 = searchMostSimilar(imagesList, imageQueryItem);
-  listRes0.print();
+    if (allImages.size() < 2)
+    {
+        cerr << "Eh necessario pelo menos 2 imagens (1 base + 1 consulta).\n";
+        return 1;
+    }
 
-  vector<ImageItem> imagesHashBase = {imageItem1, imageItem2, imageItem3};
-  HashSearchResult hashRes0 = searchMostSimilarHash(imagesHashBase, imageQueryItem, 3);
-  hashRes0.print();
+    // última imagem do intervalo será a imagem de consulta
+    ImageItem imageQueryItem = allImages[allImages.size() - 1];
 
-  cout << "\n\n== BUSCA POR QUADTREE ==\n";
-  vector<ImageItem> imagesQTBase = {imageItem1, imageItem2, imageItem3};
-  QuadtreeSearchResult qtRes0 = searchMostSimilarQuadtree(imagesQTBase, imageQueryItem);
-  qtRes0.print();
+    // base = todas menos a última
+    vector<ImageItem> imagesList;
+    for (int i = 0; i < (int)allImages.size() - 1; i++)
+    {
+        imagesList.push_back(allImages[i]);
+    }
 
-  cout << "\n\n== BUSCA EM M-TREE ==\n";
-  MTree tree0;
-  tree0.insert(imageItem1);
-  tree0.insert(imageItem2);
-  tree0.insert(imageItem3);
-  MTreeSearchResult mtreeRes0 = tree0.searchMostSimilar(imageQueryItem);
-  mtreeRes0.print();
+    // BUSCAS NORMAIS (SEM TEMPO)
+    cout << "\n\n== BUSCA EM LISTA ==\n";
+    ListSearchResult listRes0 = searchMostSimilar(imagesList, imageQueryItem);
+    listRes0.print();
 
-  // =======================================================
-  // =============    TESTE DE TEMPO   ======================
-  // =======================================================
-  cout << "\n\n===== TESTE DE TEMPO =====\n";
+    vector<ImageItem> imagesHashBase;
+    for (int i = 0; i < (int)imagesList.size(); i++)
+        imagesHashBase.push_back(imagesList[i]);
 
-  // LISTA -----------------
-  auto t1 = Clock::now();
-  vector<ImageItem> listBase = {imageItem1, imageItem2, imageItem3};
-  auto t2 = Clock::now();
+    HashSearchResult hashRes0 = searchMostSimilarHash(imagesHashBase, imageQueryItem, 3);
+    hashRes0.print();
 
-  auto b1 = Clock::now();
-  ListSearchResult listRes = searchMostSimilar(listBase, imageQueryItem);
-  auto b2 = Clock::now();
+    cout << "\n\n== BUSCA POR QUADTREE ==\n";
+    vector<ImageItem> imagesQTBase;
+    for (int i = 0; i < (int)imagesList.size(); i++)
+        imagesQTBase.push_back(imagesList[i]);
 
-  double listBuild = ms(t1, t2);
-  double listSearch = ms(b1, b2);
+    QuadtreeSearchResult qtRes0 = searchMostSimilarQuadtree(imagesQTBase, imageQueryItem);
+    qtRes0.print();
 
-  // HASH -----------------
-  auto h1 = Clock::now();
-  vector<ImageItem> hashBase = {imageItem1, imageItem2, imageItem3};
-  auto h2 = Clock::now();
+    cout << "\n\n== BUSCA EM M-TREE ==\n";
+    MTree tree0;
+    for (int i = 0; i < (int)imagesList.size(); i++)
+        tree0.insert(imagesList[i]);
 
-  auto hb1 = Clock::now();
-  HashSearchResult hashRes2 = searchMostSimilarHash(hashBase, imageQueryItem, 1);
-  auto hb2 = Clock::now();
+    MTreeSearchResult mtreeRes0 = tree0.searchMostSimilar(imageQueryItem);
+    mtreeRes0.print();
 
-  double hashBuild = ms(h1, h2);
-  double hashSearch = ms(hb1, hb2);
+    // =======================================================
+    // =============    TESTE DE TEMPO   ======================
+    // =======================================================
+    cout << "\n\n===== TESTE DE TEMPO =====\n";
 
-  // QUADTREE -----------------
-  auto q1 = Clock::now();
-  vector<ImageItem> qtBase = {imageItem1, imageItem2, imageItem3};
-  QuadtreeSearchResult qtRes2 = searchMostSimilarQuadtree(qtBase, imageQueryItem);
-  auto q2 = Clock::now();
+    // LISTA -----------------
+    auto t1 = Clock::now();
+    vector<ImageItem> listBase;
+    for (int i = 0; i < (int)imagesList.size(); i++)
+        listBase.push_back(imagesList[i]);
+    auto t2 = Clock::now();
 
-  double qtBuild_Total = ms(q1, q2);
-  double qtSearch = qtBuild_Total; // busca integrada
+    auto b1 = Clock::now();
+    ListSearchResult listRes = searchMostSimilar(listBase, imageQueryItem);
+    auto b2 = Clock::now();
 
-  // M-TREE -----------------
-  auto m1 = Clock::now();
-  MTree mtree;
-  mtree.insert(imageItem1);
-  mtree.insert(imageItem2);
-  mtree.insert(imageItem3);
-  auto m2 = Clock::now();
+    double listBuild = ms(t1, t2);
+    double listSearch = ms(b1, b2);
 
-  auto mb1 = Clock::now();
-  MTreeSearchResult mtreeRes2 = mtree.searchMostSimilar(imageQueryItem);
-  auto mb2 = Clock::now();
+    // HASH -----------------
+    auto h1 = Clock::now();
+    vector<ImageItem> hashBase;
+    for (int i = 0; i < (int)imagesList.size(); i++)
+        hashBase.push_back(imagesList[i]);
+    auto h2 = Clock::now();
 
-  double mtBuild = ms(m1, m2);
-  double mtSearch = ms(mb1, mb2);
+    auto hb1 = Clock::now();
+    HashSearchResult hashRes2 = searchMostSimilarHash(hashBase, imageQueryItem, 1);
+    auto hb2 = Clock::now();
 
-  // RESULTADOS ----------------------
-  cout << "\n===== TEMPOS (ms) =====\n";
-  cout << "Lista:    build=" << listBuild << " | busca=" << listSearch << "\n";
-  cout << "Hash:     build=" << hashBuild << " | busca=" << hashSearch << "\n";
-  cout << "Quadtree: build+search=" << qtBuild_Total << " (Não Separado)\n";
-  cout << "M-Tree:   build=" << mtBuild << " | busca=" << mtSearch << "\n\n";
+    double hashBuild = ms(h1, h2);
+    double hashSearch = ms(hb1, hb2);
 
-  return 0;
+    // QUADTREE -----------------
+    auto q1 = Clock::now();
+    vector<ImageItem> qtBase;
+    for (int i = 0; i < (int)imagesList.size(); i++)
+        qtBase.push_back(imagesList[i]);
+
+    QuadtreeSearchResult qtRes2 = searchMostSimilarQuadtree(qtBase, imageQueryItem);
+    auto q2 = Clock::now();
+
+    double qtBuild_Total = ms(q1, q2);
+    double qtSearch = qtBuild_Total; // busca integrada
+
+    // M-TREE -----------------
+    auto m1 = Clock::now();
+    MTree mtree;
+    for (int i = 0; i < (int)imagesList.size(); i++)
+        mtree.insert(imagesList[i]);
+    auto m2 = Clock::now();
+
+    auto mb1 = Clock::now();
+    MTreeSearchResult mtreeRes2 = mtree.searchMostSimilar(imageQueryItem);
+    auto mb2 = Clock::now();
+
+    double mtBuild = ms(m1, m2);
+    double mtSearch = ms(mb1, mb2);
+
+    // RESULTADOS ----------------------
+    cout << "\n===== TEMPOS (ms) =====\n";
+    cout << "Lista:    build=" << listBuild << " | busca=" << listSearch << "\n";
+    cout << "Hash:     build=" << hashBuild << " | busca=" << hashSearch << "\n";
+    cout << "Quadtree: build+search=" << qtBuild_Total << " (Não Separado)\n";
+    cout << "M-Tree:   build=" << mtBuild << " | busca=" << mtSearch << "\n\n";
+
+    return 0;
 }
