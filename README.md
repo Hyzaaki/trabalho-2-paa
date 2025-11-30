@@ -36,4 +36,4 @@ Apesar de ser funcional, a M-Tree implementa uma versão simplificada:
 * **Heurística de Split:** A divisão do nó é feita utilizando uma *heurística de promoção básica* (ex: último elemento) e não algoritmos avançados como MinMax ou Balanced Redistribution.
 * **Implicação:** Esta simplificação **não compromete a exatidão** da busca (o resultado 1-NN é sempre correto), mas é uma simplificação de engenharia que deve ser considerada ao analisar o custo de **construção** *(O(N log N))*, que seria otimizado em uma versão formal para escala maior.
 
-O relatório final utiliza a superioridade da busca M-Tree ($O(\log N)$) em relação à Lista ($O(N)$) e a sua exatidão (em contraste com a Quadtree) para justificar a escolha da estrutura.
+O relatório final utiliza a superioridade da busca M-Tree *(O(log N))* em relação à Lista *(O(N))* e a sua exatidão (em contraste com a Quadtree) para justificar a escolha da estrutura.
