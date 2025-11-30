@@ -1,68 +1,39 @@
-## Status do Projeto
-O código já está funcionando com sucesso para as quatro estruturas:
-* **Lista** (Linear Search)
-* **Hash** (SimHash 128b + Hamming)
-* **Quadtree** (2D baseado no histograma RGB)
-* **M-Tree** (estrutura métrica simplificada)
-
-Também já está implementado:
-* **cálculo de histograma RGB** (8×8×8 → 512 bins)
-* **distância qui-quadrado**
-* **busca 1-NN para todas as estruturas**
-* **medição de tempo de construção e busca** (com chrono)
-* **comparativo de tempos no final da execução**
+## TRABALHO 2: ANÁLISE COMPARATIVA DE ESTRUTURAS DE DADOS
+Este repositório contém a implementação final em C++ para o Trabalho 2 da disciplina de **Projeto e Análise de Algoritmos (PAA)**. O objetivo foi realizar uma análise de custos computacionais de quatro estruturas para busca de similaridade em alta dimensão (Histogramas RGB 512D), com foco na inclusão e avaliação da M-Tree.
 
 ---
-## O que ainda falta fazer
-1. **Usar mais imagens nos experimentos** [FEITO]
-* Atualmente o teste usa apenas 4 imagens.
-* O ideal para o relatório é entre 50 e 200 imagens
-* todas no formato PPM P6 (o código só aceita esse formato)
+## Status Final do Projeto
+O código-base está completo, funcional e foi avaliado com sucesso utilizando bases de dados de até N=100 imagens.
 
-2. **Ajustar o main para testes em lote** [FEITO]
+**Estruturas de Dados Implementadas**
 
-3. **Gerar tabelas para o relatório**
-Depois que o código estiver rodando com N imagens, será necessário produzir:
-* tabela de tempo de construção das 4 estruturas
-* tabela de tempo de busca
-* comparação conceitual (teórica vs prática)
-* análise dos resultados
-* observações sobre limitações da implementação
-
+O sistema integra e compara quatro metodologias distintas de indexação, todas operando com histogramas de cor normalizados de 512 dimensões e Distância Qui-quadrado.
+```
+ _________________________________________________________________________________________________________
+|   Estrutura    |          Propósito            | Complexidade de Busca  |          Tipo de Busca        |
+|________________|_______________________________|________________________|_______________________________|
+|     Lista      |            Baseline           |       O (N · D)        |             Exata             |
+| Hash (SimHash) |           Aproximação         | Sublinear / Quase O(1) |          Aproximada           |
+|    Quadtree    | Particionamento Espacial (2D) |   O(log N) esperado    | Exata (com perda de precisão) |
+|     M-Tree     |         Métrica, Alta D       |  O(log N · D) esperado |             Exata             |
+|_________________________________________________________________________________________________________|
+```
 ---
-## Observações Importantes sobre a M-Tree (para o relatório)
-A implementação atual funciona perfeitamente para 1-NN, mas:
-* usa um split simplificado
-* não segue 100% o algoritmo formal de Ciaccia et al. (1997)
-* o nó que divide gera um novo nó irmão, mas não faz promoção ideal de pivô
-* para o Trabalho 2, isso é aceitável, desde que explicado no relatório
+## 1. Representação dos Dados
 
----
-## Pontos importantes para mencionar no relatório
+* **Descritor:** Histograma RGB de 8x8x8 bins, resultando em um vetor de 512 dimensões.
 
-**A M-Tree implementada é funcional, mas não usa heurísticas avançadas**
-A implementação usa:
-* promoção simples (último elemento)
-* split básico
-* sem minMax, balanced ou random promotion
+* **Métrica Exata: Distância Qui-quadrado** (usada por Lista, Quadtree e M-Tree) para medir similaridade entre histogramas.
 
-**Isso NÃO afeta as buscas 1-NN nesse conjunto pequeno**
+* **Análise:** O main.cpp inclui medições de tempo de Construção e Busca (std::chrono) para a avaliação empírica de custos.
 
-O resultado continuará o mesmo que a lista linear.
+## 2. Observações Cruciais sobre a M-Tree
 
-**A análise teórica continua válida**
-Mesmo com split simples, a M-Tree:
-* é uma estrutura métrica
-* usa distância qui-quadrado
-* permite poda de regiões
-* tem custo assintótico sublinear esperado
+A implementação da **M-Tree** em *search_mtree.hpp* foi crucial para a análise de custos, pois forneceu a única busca exata em tempo sublinear na métrica Qui-quadrado.
 
-**É válido explicar no relatório que uma versão simplificada foi usada**
+Apesar de ser funcional, a M-Tree implementa uma versão simplificada:
 
-**Se você quiser no futuro: Implementar um split correto (opcional)**
-Uma versão completa da M-Tree deveria implementar:
-* promoção de pivô por heurística minMax
-* redistribuição equilibrada dos itens
-* propagação do split para cima (pai que faz o split, não a folha)
-* função separada trySplit(child)
-* Mas não é obrigatório para o trabalho.
+* **Heurística de Split:** A divisão do nó é feita utilizando uma *heurística de promoção básica* (ex: último elemento) e não algoritmos avançados como MinMax ou Balanced Redistribution.
+* **Implicação:** Esta simplificação **não compromete a exatidão** da busca (o resultado 1-NN é sempre correto), mas é uma simplificação de engenharia que deve ser considerada ao analisar o custo de **construção** *(O(N log N))*, que seria otimizado em uma versão formal para escala maior.
+
+O relatório final utiliza a superioridade da busca M-Tree ($O(\log N)$) em relação à Lista ($O(N)$) e a sua exatidão (em contraste com a Quadtree) para justificar a escolha da estrutura.
